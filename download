@@ -1,0 +1,6 @@
+# ฐานข้อมูลจริง (มีข้อมูลและรหัสผ่าน) ไม่ขึ้น GitHub: ระบบสร้างใหม่เองตอนเปิดเว็บครั้งแรก
+data/*.db
+data/*.db-journal
+.DS_Store
+data/*.db-wal
+data/*.db-shm

@@ -1,0 +1,1698 @@
+/* =========================================================
+   โปรแกรมทดลองคำนวณเกรดเฉลี่ยสะสม (GPA) — สไตล์ทั้งหมด
+   ลำดับ: พื้นฐาน → แบนเนอร์ → การ์ด → ช่องกรอก → รายวิชา
+          → ผลคำนวณ → ป๊อปอัป → แบบประเมิน → หน้าแอดมิน → มือถือ
+   ========================================================= */
+
+
+/* ---------- 1. พื้นฐาน ---------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #eaf5fc;
+  font-family: "Noto Sans Thai", Tahoma, Arial, sans-serif;
+  color: #135292;
+  -webkit-text-size-adjust: 100%;   /* กัน Safari ขยายตัวหนังสือเองตอนหมุนจอ */
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 0 28px;
+}
+
+.wrap {
+  padding: 20px 20px 0;
+}
+
+.stack {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+/* ซ่อนจากสายตาแต่โปรแกรมอ่านหน้าจอยังอ่านได้ */
+.sr-only {
+  position: absolute;
+  left: -10000px;
+}
+
+
+/* ---------- 2. แบนเนอร์ + สถิติมุมขวาบน ---------- */
+
+.hero {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1536 / 128;
+  background: url("../images/banner.jpg") left center / cover no-repeat;
+}
+
+.hero-stats {
+  position: absolute;
+  right: 2.2%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  justify-items: end;
+  gap: 0.35em;
+  font-size: clamp(9px, 1.05vw, 14px);
+  font-weight: 700;
+  color: #1458a8;
+  white-space: nowrap;
+}
+
+.hero-stats b {
+  font-size: 1.15em;
+  color: #0b5fb5;
+}
+
+.hero-stats small {
+  font-size: 0.9em;
+  font-weight: 400;
+  color: #5e7fa3;
+}
+
+
+/* ---------- 3. การ์ดและหัวข้อแต่ละส่วน ---------- */
+
+.card {
+  padding: 20px 22px;
+  background: #fff;
+  border: 1px solid #dbe9f5;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px #6e9ac514;
+}
+
+.sec-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.sec-head .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.sec-head h2 {
+  margin: 0;
+  font-size: 19px;
+  color: #1458a8;
+}
+
+.sec-head .sec-note {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: #7b95b3;
+}
+
+.sec-head p {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: #5e7fa3;
+}
+
+.badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #1a6fd8;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ปุ่มทรงแคปซูล: "เกณฑ์ผลการเรียน" */
+.notice-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid #bcd9f5;
+  border-radius: 99px;
+  background: #eef6fd;
+  color: #1458a8;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.notice-btn:hover {
+  background: #dceafb;
+}
+
+
+/* ---------- 4. ช่องกรอก CAX / CGX ---------- */
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.lbl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1b4f86;
+}
+
+/* ปุ่ม "คำอธิบาย" ข้างชื่อช่อง */
+.explain {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid #bcd9f5;
+  border-radius: 99px;
+  background: #eef6fd;
+  color: #1458a8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.explain:hover {
+  background: #dceafb;
+}
+
+/* หน่วยท้ายช่อง เช่น "หน่วยกิต" */
+.inwrap {
+  position: relative;
+}
+
+.inwrap span {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #7b95b3;
+  pointer-events: none;
+}
+
+.inwrap .field {
+  padding-right: 64px;
+}
+
+.field {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #cbddef;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d4c7c;
+  font-size: 14px;
+  outline: none;
+}
+
+.field::placeholder {
+  color: #b3c4d6;
+  opacity: 1;
+}
+
+.field:focus {
+  border-color: #2387e7;
+  box-shadow: 0 0 0 3px #258cf022;
+}
+
+/* ช่องเลือก: ใช้ลูกศรของเราเอง ให้หน้าตาเหมือนกันทั้ง Chrome และ Safari */
+select.field {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 32px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237b95b3' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 10px center / 16px no-repeat;
+}
+
+/* ช่องเลือกเกรดตอนยังไม่เลือก ให้ตัวอักษรจางเหมือนคำแนะนำ */
+select.field.unset {
+  color: #b3c4d6;
+}
+
+select.field option {
+  color: #1d4c7c;
+}
+
+
+/* ---------- 5. รายวิชา ---------- */
+
+/* แต่ละวิชาเป็นการ์ดมีแถบสีด้านซ้าย สี (--c) กับพื้น (--bg) ตั้งใน js/app.js */
+.course {
+  display: grid;
+  grid-template-columns: 34px 20% 1fr 14% 16% 40px;
+  grid-template-areas: "num code name cred grade del";
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px 10px 10px 14px;
+  border-left: 5px solid var(--c);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.course .field {
+  height: 40px;
+  border-color: color-mix(in srgb, var(--c) 30%, #cbddef);
+}
+
+/* รายวิชาเยอะ: เลื่อนดูในกล่องด้วยลูกกลิ้งเมาส์/นิ้ว หน้าเว็บไม่ยาวขึ้นเรื่อยๆ */
+#rows {
+  max-height: 340px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+#rows::-webkit-scrollbar {
+  width: 8px;
+}
+
+#rows::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: #c9dcef;
+}
+
+/* เลขลำดับวิชา: คอม = วงกลมเลข, มือถือ = ป้าย "วิชาที่ 1" (สีตามแถบสีของวิชา) */
+.c-num   { grid-area: num; }
+
+.c-num span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--c);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.c-num small {
+  display: none;
+}
+
+/* ช่องที่ยังไม่กรอก ตอนกดเพิ่มรายวิชา: กรอบแดง + สั่นเบา ๆ */
+.course .field.need {
+  border-color: #e04848;
+  box-shadow: 0 0 0 3px #e0484822;
+  animation: need-shake 0.35s;
+}
+
+@keyframes need-shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
+
+.c-code  { grid-area: code; }
+.c-name  { grid-area: name; }
+.c-cred  { grid-area: cred; }
+.c-grade { grid-area: grade; }
+.c-del   { grid-area: del; }
+
+/* ปุ่มถังขยะ */
+.del {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: auto;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #7796b8;
+  cursor: pointer;
+}
+
+.del:hover {
+  color: #e35b5b;
+  background: #fff0f0;
+}
+
+.del svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* กล่องว่างตอนยังไม่มีรายวิชา */
+.empty {
+  padding: 22px 12px;
+  border: 1.5px dashed #cfe0f0;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13.5px;
+  color: #7b95b3;
+}
+
+.empty[hidden] {
+  display: none;
+}
+
+.addbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.add {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #1685dc;
+  border-radius: 9px;
+  background: #fff;
+  color: #0878c8;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.add:hover:not(:disabled) {
+  background: #e5f3ff;
+}
+
+.add:disabled {
+  border-color: #c9d8e6;
+  color: #9db1c6;
+  cursor: not-allowed;
+}
+
+.count {
+  font-size: 13px;
+  color: #6c8daf;
+}
+
+
+/* ---------- 6. ผลการคำนวณ ---------- */
+
+.res-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.res-box {
+  min-height: 132px;
+  padding: 18px 10px;
+  border: 1px solid #dbe9f5;
+  border-radius: 12px;
+  background: #f3f9ff;
+  text-align: center;
+}
+
+.res-box b {
+  display: block;
+  font-size: 15px;
+}
+
+.res-box small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: #6c8daf;
+}
+
+.res-box strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 30px;
+  color: #1a6fd8;
+}
+
+.res-box em {
+  display: block;
+  margin-top: 4px;
+  font-style: normal;
+  font-size: 11.5px;
+  color: #7b95b3;
+}
+
+.res-box.new strong {
+  color: #0c83ac;
+}
+
+/* GPA ใหม่สูงขึ้น = เขียว, ลดลง = แดง (มีคำว่าเพิ่มขึ้น/ลดลงกำกับด้วย ไม่ใช้สีอย่างเดียว) */
+.res-box.new.up         { background: #ecf9f2; border-color: #bfe8d2; }
+.res-box.new.up strong,
+.res-box.new.up em      { color: #15965a; }
+.res-box.new.down       { background: #fdf0f0; border-color: #f3c9c9; }
+.res-box.new.down strong,
+.res-box.new.down em    { color: #d64545; }
+.res-box.new em         { font-weight: 700; }
+
+/* GPA ใหม่ขยายเด่นขึ้นเฉพาะตอนมีตัวเลข (ยังไม่มีตัวเลข = ขนาดเท่ากล่องอื่น) */
+.res-box.new {
+  position: relative;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+.res-box.new.lit {
+  z-index: 1;
+  border: 2px solid #2f7de1;
+  transform: scale(1.06);
+  box-shadow: 0 10px 28px rgba(47, 125, 225, 0.25);
+}
+
+.res-box.new.lit.up   { border-color: #18a058; box-shadow: 0 10px 28px rgba(24, 160, 88, 0.25); }
+.res-box.new.lit.down { border-color: #e04848; box-shadow: 0 10px 28px rgba(224, 72, 72, 0.25); }
+
+.res-box.new.lit b      { font-size: 18px; }
+.res-box.new.lit strong { font-size: 44px; }
+.res-box.new.lit em     { font-size: 13.5px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .res-box.new { transition: none; }
+}
+
+/* ข้อมูลติดต่อสำนักทะเบียน (ท้ายหน้า): ชิดซ้าย แบ่ง 3 คอลัมน์ มือถือเรียงลงมา */
+.contact {
+  margin-top: 24px;
+  padding: 20px 22px;
+  border: 1px solid #dbe9f5;
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #5e7fa3;
+}
+
+.contact-head {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #eef3f8;
+}
+
+.contact h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #1458a8;
+}
+
+.contact .contact-en {
+  margin: 0;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 8px 24px;
+}
+
+.contact-grid p {
+  margin: 0;
+}
+
+.contact a {
+  color: #1a6fd8;
+  text-decoration: none;
+}
+
+.res-box.sub {
+  background: #fff;
+}
+
+.res-box.sub strong {
+  font-size: 24px;
+  color: #14569a;
+}
+
+/* ปุ่มเปิดแบบประเมิน (ล่างสุดของหน้า) */
+.rate-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 50px;
+  margin-top: 18px;
+  border: 1px solid #bcd9f5;
+  border-radius: 14px;
+  background: #fff;
+  color: #1458a8;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 2px 10px #6e9ac514;
+  cursor: pointer;
+}
+
+.rate-open:hover {
+  background: #eef6fd;
+}
+
+/* ปุ่มแอดมิน (ล่างสุด ตัวเล็กจาง ไม่แย่งความเด่นของหน้า) */
+.admin-foot {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.admin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 99px;
+  background: transparent;
+  color: #7b95b3;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.admin-link:hover {
+  background: #e3eef8;
+  color: #1458a8;
+}
+
+.admin-link svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ข้อความแจ้งเตือนสั้นๆ ด้านล่างจอ */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 80;
+  padding: 9px 15px;
+  border-radius: 9px;
+  background: #0d5e9d;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 8px 24px #124b7833;
+  opacity: 0;
+  transform: translate(-50%, 14px);
+  transition: 0.2s;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+
+/* ---------- 7. ป๊อปอัป (ใช้ร่วมกันทุกอัน) ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(16, 48, 78, 0.42);
+  backdrop-filter: blur(3px);
+}
+
+.modal-backdrop[hidden] {
+  display: none !important;
+}
+
+.dialog {
+  position: relative;
+  width: min(480px, calc(100vw - 28px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid #d6e8f7;
+  border-radius: 20px;
+  background: linear-gradient(160deg, #fff, #f4faff);
+  box-shadow: 0 24px 80px #123c6840;
+  color: #164b7d;
+}
+
+.dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog-head .dialog-close {
+  margin-left: auto;
+}
+
+.dialog-kicker {
+  font: 700 10px Arial, sans-serif;
+  letter-spacing: 0.13em;
+  color: #2385ca;
+}
+
+.dialog-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #dfebf6;
+  border-radius: 10px;
+  background: #fff;
+  color: #52789e;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dialog h2 {
+  margin: 12px 0 4px;
+  font-size: 21px;
+  color: #144d82;
+}
+
+.dialog-body {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: #36597d;
+  white-space: pre-line;
+}
+
+.dialog-body b {
+  color: #144d82;
+}
+
+/* ภาพตัวอย่างในป๊อปอัปคำอธิบาย CAX / CGX */
+.help-shot {
+  position: relative;
+  margin-top: 16px;
+}
+
+.help-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid #dbe9f5;
+  border-radius: 12px;
+}
+
+/* กรอบแดงรอบคอลัมน์ */
+.help-shot .mark {
+  position: absolute;
+  top: 6.4%;
+  height: 73.2%;
+  border: 3px solid #e2282f;
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px #ffffffcc;
+}
+
+/* ป้ายชื่อบนกรอบ */
+.help-shot .mark b {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  padding: 0 8px;
+  border-radius: 99px;
+  background: #e2282f;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+/* แถบเหลืองที่บรรทัดล่างสุด = ค่าที่ต้องกรอก */
+.help-shot .last {
+  position: absolute;
+  top: 72.8%;
+  height: 5.8%;
+  border-radius: 6px;
+  background: rgba(255, 214, 51, 0.5);
+}
+
+.help-cap {
+  display: block;
+  margin-top: 6px;
+  text-align: center;
+  font-size: 12.5px;
+  color: #7b95b3;
+}
+
+.modal-action {
+  width: 100%;
+  margin-top: 16px;
+  padding: 11px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(100deg, #168ad1, #1476c4);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-action:hover {
+  filter: brightness(1.05);
+}
+
+/* ป๊อปอัปเกณฑ์ผลการเรียน */
+#noticeModal .dialog {
+  width: min(600px, calc(100vw - 28px));
+}
+
+.notice-body {
+  display: grid;
+  gap: 10px;
+  white-space: normal;
+}
+
+.rule {
+  padding: 10px 14px;
+  border: 1px solid #dbe9f5;
+  border-left: 4px solid #1a6fd8;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.rule h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: #144d82;
+}
+
+.rule ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.rule.ok    { border-left-color: #1a9a6c; }
+.rule.honor { border-left-color: #d9a21b; background: #fffcf2; }
+.rule.warn  { border-left-color: #e08a1e; }
+.rule.bad   { border-left-color: #d9534f; }
+
+/* หมายเหตุท้ายเกณฑ์ (ผลการเรียนที่ไม่นำมาคำนวณ) */
+.rule-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #eef6fd;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #36597d;
+}
+
+.ref {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-style: italic;
+  color: #7b95b3;
+}
+
+.ref a {
+  color: #1a6fd8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ref a:hover {
+  color: #0b5fb5;
+}
+
+
+/* ---------- 8. ป๊อปอัปแบบประเมิน ---------- */
+
+.rate-dialog {
+  width: min(560px, calc(100vw - 28px));
+  padding: 32px 32px 28px;
+  border: 1px solid #e0f2fe;
+  border-radius: 18px;
+  background: #fff;
+  font-family: Prompt, "Noto Sans Thai", sans-serif;
+  color: #1e293b;
+  text-align: center;
+}
+
+.rate-dialog .dialog-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 26px;
+}
+
+.rate-dialog h2 {
+  margin: 10px 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.rate-pill {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 99px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.rate-sub {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.rate-q {
+  margin: 24px 0 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.rate-q i,
+.rate-fb i {
+  font-style: normal;
+}
+
+.rate-q i {
+  color: #f43f5e;
+}
+
+.rate-fb i {
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.star {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: transform 0.15s, color 0.15s;
+  touch-action: manipulation;
+}
+
+.star svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.star.on {
+  color: #38bdf8;
+}
+
+.star:hover {
+  transform: scale(1.18);
+}
+
+.star:active {
+  transform: scale(0.95);
+}
+
+.rate-label {
+  min-height: 21px;
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0284c7;
+}
+
+.rate-fb {
+  display: block;
+  margin: 24px 0 6px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.rate-text {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fbff;
+  font: inherit;
+  font-size: 14px;
+  color: #334155;
+  resize: vertical;
+  outline: none;
+}
+
+.rate-text::placeholder {
+  color: #94a3b8;
+}
+
+.rate-text:focus {
+  background: #fff;
+  box-shadow: 0 0 0 2px #38bdf8;
+}
+
+.rate-count {
+  margin-top: 4px;
+  text-align: right;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.rate-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 20px;
+  padding: 13px;
+  border: 0;
+  border-radius: 12px;
+  background: #0ea5e9;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  box-shadow: 0 4px 8px #bae6fd;
+  cursor: pointer;
+}
+
+.rate-send:hover {
+  background: #0284c7;
+}
+
+.rate-send svg {
+  width: 16px;
+  height: 16px;
+}
+
+
+/* ---------- 9. หน้าเข้าสู่ระบบแอดมิน (ตัวอย่าง) ---------- */
+
+/* หน้าแอดมินแสดงแค่การ์ดเข้าสู่ระบบ: ซ่อนแบนเนอร์และสถิติด้านบน */
+body.admin-mode .hero {
+  display: none;
+}
+
+body.admin-mode .page {
+  padding-bottom: 0;
+}
+
+.admin-view {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;   /* มือถือ: ไม่นับแถบที่อยู่ของเบราว์เซอร์ */
+  padding: 24px 16px;
+}
+
+.admin-view[hidden],
+#mainView[hidden] {
+  display: none;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  padding: 36px 32px 24px;
+  border: 1px solid #dbe9f5;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 12px 40px #6e9ac522;
+  text-align: center;
+}
+
+.login-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #eef6fd;
+  color: #1a6fd8;
+}
+
+.login-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.login-card h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #1458a8;
+}
+
+.login-card > p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: #5e7fa3;
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+  text-align: left;
+}
+
+/* ปุ่ม "แสดง/ซ่อน" รหัสผ่าน อยู่ท้ายช่อง */
+.pass-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #1a6fd8;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pass-toggle:hover {
+  background: #eef6fd;
+}
+
+.login-btn {
+  height: 46px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(100deg, #168ad1, #1476c4);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px #1476c433;
+}
+
+.login-btn:hover {
+  filter: brightness(1.05);
+}
+
+.back-link {
+  margin-top: 18px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #1a6fd8;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.back-link:hover {
+  background: #eef6fd;
+}
+
+
+/* แผงผู้ดูแลหลังเข้าสู่ระบบ */
+.admin-view {
+  grid-template-columns: minmax(0, 1fr);   /* ให้แผงหดตามจอ ไม่ล้นในมือถือ */
+}
+
+.admin-panel {
+  width: min(900px, 100%);
+  min-width: 0;
+  justify-self: center;
+  padding: 24px;
+  border: 1px solid #dbe9f5;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 12px 40px #6e9ac522;
+  align-self: start;
+}
+
+.admin-panel[hidden],
+.login-card[hidden],
+.ap-pane[hidden] {
+  display: none;
+}
+
+.ap-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ap-head h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #1458a8;
+}
+
+.ap-head p {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  color: #5e7fa3;
+}
+
+.ap-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 10px;
+  border-radius: 99px;
+  background: #eef6fd;
+  color: #1a6fd8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ap-badge.super {
+  background: #fff4e0;
+  color: #b35f00;
+}
+
+.ap-logout {
+  flex: none;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid #f3c9c9;
+  border-radius: 99px;
+  background: #fff;
+  color: #d64545;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ap-logout:hover {
+  background: #fdf0f0;
+}
+
+/* แถบเมนู */
+.ap-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 18px 0 20px;
+  padding: 5px;
+  border-radius: 14px;
+  background: #eef6fd;
+  overflow-x: auto;
+  scrollbar-width: none;   /* มือถือเลื่อนแถบเมนูซ้ายขวาได้ แต่ไม่โชว์แถบเลื่อน */
+}
+
+.ap-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.ap-tabs button {
+  flex: 1 0 auto;
+  height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #4f7092;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ap-tabs button.on {
+  background: #fff;
+  color: #1458a8;
+  box-shadow: 0 2px 8px #6e9ac522;
+}
+
+.ap-tabs button[hidden] {
+  display: none;
+}
+
+.ap-title {
+  margin: 18px 0 10px;
+  font-size: 15px;
+  color: #1458a8;
+}
+
+.ap-pane > .ap-title:first-child {
+  margin-top: 0;
+}
+
+/* หัวข้อ + ปุ่มดาวน์โหลด Excel ในแท็บความคิดเห็น */
+.ap-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ap-title-row .ap-title {
+  margin: 0;
+}
+
+.ap-export {
+  flex: none;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #b7e0c4;
+  border-radius: 99px;
+  background: #eefaf1;
+  color: #1d7a3e;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ap-export:hover {
+  background: #dff4e6;
+}
+
+.ap-export:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+/* ปุ่ม "+ เพิ่มแอดมิน" ข้างหัวข้อรายชื่อผู้ดูแล */
+.ap-add {
+  flex: none;
+  height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 99px;
+  background: linear-gradient(100deg, #168ad1, #1476c4);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px #1476c433;
+}
+
+.ap-add:hover {
+  filter: brightness(1.06);
+}
+
+/* ป๊อปอัปเพิ่มแอดมิน */
+.add-admin-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.add-admin-form label {
+  display: grid;
+  gap: 5px;
+}
+
+.add-admin-form label > span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1d4c7c;
+}
+
+.add-admin-form small {
+  font-weight: 400;
+  color: #7b95b3;
+}
+
+.add-admin-actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.add-admin-actions .modal-action {
+  margin-top: 0;
+}
+
+.ap-cancel {
+  padding: 11px;
+  border: 1px solid #cbddef;
+  border-radius: 11px;
+  background: #fff;
+  color: #4f7092;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ap-cancel:hover {
+  background: #f3f8fd;
+}
+
+/* การ์ดตัวเลขบนแดชบอร์ด */
+.ap-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.ap-stat {
+  padding: 16px 10px;
+  border: 1px solid #dbe9f5;
+  border-radius: 14px;
+  background: #f3f9ff;
+  text-align: center;
+}
+
+.ap-stat small {
+  display: block;
+  font-size: 12.5px;
+  color: #6c8daf;
+}
+
+.ap-stat strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 30px;
+  color: #1a6fd8;
+}
+
+.ap-stat span {
+  font-size: 12px;
+  color: #7b95b3;
+}
+
+/* แท่งคะแนนแต่ละระดับดาว */
+.ap-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.ap-bar {
+  display: grid;
+  grid-template-columns: 54px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #36597d;
+}
+
+.ap-bar i {
+  display: block;
+  height: 12px;
+  border-radius: 99px;
+  background: #eef3f8;
+  overflow: hidden;
+}
+
+.ap-bar i b {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #38bdf8, #1a6fd8);
+}
+
+.ap-bar span:last-child {
+  text-align: right;
+  font-weight: 700;
+}
+
+/* รายการความคิดเห็น / รายชื่อแอดมิน */
+.ap-comments,
+.ap-admins {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ap-comments li,
+.ap-admins li {
+  padding: 12px 14px;
+  border: 1px solid #dbe9f5;
+  border-radius: 12px;
+  background: #fbfdff;
+  font-size: 14px;
+  color: #36597d;
+}
+
+.ap-comments .stars-txt {
+  color: #f4b400;
+  letter-spacing: 1px;
+}
+
+.ap-comments small,
+.ap-admins small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #7b95b3;
+}
+
+.ap-empty {
+  text-align: center;
+  color: #7b95b3;
+}
+
+.ap-admins li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.ap-del {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #f3c9c9;
+  border-radius: 8px;
+  background: #fff;
+  color: #d64545;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ap-admins li {
+  flex-wrap: wrap;
+}
+
+.ap-admins .ap-pass {
+  color: #b35f00;
+  font-weight: 700;
+}
+
+.ap-actions {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.ap-edit {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #bcd9f5;
+  border-radius: 8px;
+  background: #eef6fd;
+  color: #1458a8;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ap-passrow {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  width: 100%;
+}
+
+.ap-passrow[hidden],
+.ap-form[hidden],
+.ap-note[hidden] {
+  display: none;
+}
+
+.ap-passrow .field {
+  flex: 1;
+  height: 38px;
+}
+
+.ap-passrow .ap-edit {
+  height: 38px;
+}
+
+.ap-note {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f3f9ff;
+  font-size: 13.5px;
+  color: #4f7092;
+}
+
+.ap-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ap-form .login-btn {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+/* แถบบอกว่าเชื่อมต่อฐานข้อมูลแล้ว */
+.ap-demo {
+  margin: 22px 0 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #ecf9f2;
+  font-size: 12.5px;
+  color: #15965a;
+  text-align: center;
+}
+
+.ap-demo[hidden] {
+  display: none;
+}
+
+/* แบบประเมินที่เด้งขึ้นเอง: ไม่มีปุ่ม × */
+#rateModal.auto .dialog-close {
+  display: none;
+}
+
+
+/* ---------- 10. แท็บเล็ต / มือถือ ---------- */
+
+@media (max-width: 800px) {
+  .res-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  /* โครงหน้า */
+  .wrap  { padding: 52px 12px 0; }
+  .admin-view { padding: 24px 16px; }   /* หน้าแอดมินไม่มีสถิติใต้แบนเนอร์ ไม่ต้องเว้นที่ */
+  .admin-panel { padding: 18px 14px; }
+  .ap-stats { gap: 8px; }
+  .ap-stat strong { font-size: 24px; }
+  .ap-form { grid-template-columns: 1fr; }
+  .ap-passrow { grid-template-columns: 1fr; }
+  .contact { padding: 18px 16px; }
+  .contact-grid { grid-template-columns: 1fr; }
+  #rows { max-height: 62vh; overscroll-behavior: auto; }   /* มือถือ: เลื่อนสุดแล้วให้หน้าเว็บเลื่อนต่อได้ */
+  .ap-tabs button { flex: 0 0 auto; }
+  .stack { gap: 14px; }
+  .card  { padding: 16px 14px; }
+  .two   { grid-template-columns: 1fr; gap: 14px; }
+
+  /* สถิติย้ายมาอยู่ใต้แบนเนอร์ เพราะแบนเนอร์เตี้ยเกินจะใส่ตัวหนังสือ */
+  .hero-stats {
+    top: 100%;
+    right: 12px;
+    margin-top: 6px;
+    transform: none;
+    font-size: 12px;
+  }
+
+  /* ปุ่มเกณฑ์ผลการเรียนลงมาเต็มความกว้างใต้หัวข้อ */
+  .sec-head.res-head {
+    flex-wrap: wrap;
+  }
+
+  .res-head .notice-btn {
+    justify-content: center;
+    width: calc(100% - 42px);
+    margin-left: 42px;
+  }
+
+  /* ผลคำนวณ */
+  .res-grid { gap: 10px; }
+  .res-box  { min-height: 0; padding: 14px 6px; }
+  .res-box strong { font-size: 26px; }
+
+  /* ตัวหนังสือในช่องกรอกต้อง 16px ขึ้นไป ไม่งั้น Safari บน iPhone จะซูมหน้าเองตอนแตะช่อง */
+  .field,
+  .rate-text {
+    font-size: 16px;
+  }
+
+  .field {
+    height: 46px;
+  }
+
+  .sec-head h2 { font-size: 18px; }
+  .sec-head p  { font-size: 13.5px; line-height: 1.5; }
+  .lbl         { flex-wrap: wrap; font-size: 15px; }
+
+  /* รายวิชา: ไล่ลงมาทีละแถว ถังขยะอยู่ขวาสุด
+     แถว 1: รหัสวิชา + ถังขยะ / แถว 2: ชื่อวิชา / แถว 3: หน่วยกิต + เกรด */
+  .course {
+    grid-template-columns: 1fr 1fr 44px;
+    grid-template-areas:
+      "num   num   del"
+      "code  code  code"
+      "name  name  name"
+      "cred  grade grade";
+    gap: 8px;
+    padding: 12px 12px 12px 14px;
+  }
+
+  .course .field {
+    height: 46px;
+  }
+
+  .c-num span {
+    width: auto;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 99px;
+    font-size: 13px;
+  }
+
+  .c-num small {
+    display: inline;
+    margin-right: 4px;   /* เว้นวรรค "วิชาที่ 1" (ช่องว่างท้ายข้อความหายในกล่อง flex) */
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .add {
+    width: 100%;
+    height: 46px;
+    font-size: 15px;
+  }
+
+  .addbar {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 8px;
+  }
+
+  /* แบบประเมิน */
+  .rate-dialog    { padding: 28px 18px 22px; }
+  .rate-dialog h2 { font-size: 21px; }
+  .stars          { gap: 6px; }
+}

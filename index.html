@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#edf7ff">
+  <title>โปรแกรมทดลองคำนวณเกรดเฉลี่ยสะสม (GPA)</title>
+
+  <!-- ฟอนต์ Noto Sans Thai (ทั้งหน้า ให้เหมือนกันทุกเบราว์เซอร์) และ Prompt (ป๊อปอัปแบบประเมิน) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&family=Prompt:wght@400;500;600;700&display=swap">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+
+  <!-- ===================== แบนเนอร์ + สถิติมุมขวาบน ===================== -->
+  <header class="hero" role="img" aria-label="มหาวิทยาลัยสวนดุสิต · โปรแกรมทดลองคำนวณเกรดเฉลี่ยสะสม (GPA)">
+    <div class="hero-stats">
+      <div>ระดับความพึงพอใจ <b id="avgN">–</b> เต็ม 5 ⭐ <small id="avgCount"></small></div>
+      <div>👥 จำนวนผู้ใช้ <b id="visitN">–</b> ครั้ง</div>
+    </div>
+  </header>
+
+  <main class="wrap" id="mainView">
+    <div class="stack">
+
+      <!-- ===================== ส่วนที่ 1: CAX / CGX ===================== -->
+      <section class="card">
+        <div class="sec-head">
+          <div class="badge">1</div>
+          <div class="grow">
+            <h2>กรอกข้อมูลเดิมจากระบบ</h2>
+            <p>กรุณากรอกค่า CAX และ CGX ที่ได้จากระบบของมหาวิทยาลัยในเทอมสุดท้ายตามจริง เพื่อคำนวณเกรดเฉลี่ยที่เรียนผ่านมารวมกับระบบทดลองนี้</p>
+            <p class="sec-note">(กรณีกรอกทั้ง 2 ค่าเป็น 0 ระบบจะคำนวณเฉพาะเกรดที่ระบุในระบบทดลองนี้เท่านั้น)</p>
+          </div>
+        </div>
+
+        <div class="two">
+          <div>
+            <div class="lbl">CAX (จำนวนหน่วยกิตสะสม) <button class="explain" type="button" data-help="cax">คำอธิบาย</button></div>
+            <div class="inwrap">
+              <input class="field" id="cax" type="number" inputmode="decimal" min="0" step="any" placeholder="เช่น 120">
+              <span>หน่วยกิต</span>
+            </div>
+          </div>
+          <div>
+            <div class="lbl">CGX (คะแนนสะสม) <button class="explain" type="button" data-help="cgx">คำอธิบาย</button></div>
+            <div class="inwrap">
+              <input class="field" id="cgx" type="number" inputmode="decimal" min="0" step="0.01" placeholder="เช่น 384.50">
+              <span>คะแนน</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ส่วนที่ 2: รายวิชา ===================== -->
+      <section class="card">
+        <div class="sec-head">
+          <div class="badge">2</div>
+          <div class="grow">
+            <h2>เพิ่มรายวิชาที่ต้องการทดลอง</h2>
+            <p>กรอกข้อมูลรายวิชา จำนวนหน่วยกิต และเลือกเกรดที่ต้องการทดลอง เพิ่มได้ไม่จำกัด</p>
+          </div>
+        </div>
+
+        <div id="rows"></div>
+        <div class="empty" id="empty">ยังไม่มีรายวิชา กด “＋ เพิ่มรายวิชา” เพื่อเริ่มทดลอง</div>
+
+        <div class="addbar">
+          <button class="add" id="add" type="button">＋ เพิ่มรายวิชา</button>
+          <span class="count" id="count"></span>
+        </div>
+      </section>
+
+      <!-- ===================== ส่วนที่ 3: ผลการคำนวณ ===================== -->
+      <section class="card">
+        <div class="sec-head res-head">
+          <div class="badge">3</div>
+          <div class="grow">
+            <h2>ผลการคำนวณ GPA</h2>
+            <p>ผลจะอัปเดตทันทีเมื่อกรอกข้อมูล</p>
+          </div>
+          <button class="notice-btn" id="openNotice" type="button">เกณฑ์ผลการเรียน</button>
+        </div>
+
+        <div class="res-grid">
+          <div class="res-box"><b>GPA เดิม</b><small>(จาก CAX และ CGX)</small><strong id="oldGpa">–</strong></div>
+          <div class="res-box new"><b>GPA ใหม่</b><small>(รวมรายวิชาที่เพิ่ม)</small><strong id="newGpa">–</strong><em id="newDelta"></em></div>
+          <div class="res-box sub"><b>CAX</b><small>(หน่วยกิตสะสมรวม)</small><strong id="sCax">–</strong><em id="sCaxOld"></em></div>
+          <div class="res-box sub"><b>CGX</b><small>(คะแนนสะสมรวม)</small><strong id="sCgx">–</strong><em id="sCgxOld"></em></div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ===================== ปุ่มแบบประเมิน (ล่างสุด) ===================== -->
+    <button class="rate-open" id="openRate" type="button">ทำแบบประเมินความพึงพอใจ</button>
+
+    <!-- ===================== ติดต่อสำนักส่งเสริมวิชาการและงานทะเบียน ===================== -->
+    <footer class="contact">
+      <div class="contact-head">
+        <h3>สำนักส่งเสริมวิชาการและงานทะเบียน</h3>
+        <p class="contact-en">THE OFFICE OF ACADEMIC PROMOTION AND REGISTRATION</p>
+      </div>
+      <div class="contact-grid">
+        <p>มหาวิทยาลัยสวนดุสิต<br>295 ถนนนครราชสีมา เขตดุสิต กรุงเทพฯ 10300</p>
+        <p><a href="tel:022445172">โทร.02-244-5172-5</a><br>e-mail : <a href="mailto:saraban-reg@dusit.ac.th">saraban-reg@dusit.ac.th</a></p>
+        <p>เปิดบริการ วันจันทร์ – ศุกร์<br>เวลา 08.30 – 16.30 น.</p>
+      </div>
+    </footer>
+
+    <!-- ===================== ปุ่มแอดมิน (ล่างสุด) ===================== -->
+    <div class="admin-foot">
+      <button class="admin-link" id="openAdmin" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        สำหรับผู้ดูแลระบบ (แอดมิน)
+      </button>
+    </div>
+  </main>
+
+  <!-- ===================== หน้าเข้าสู่ระบบแอดมิน (ตัวอย่าง ยังไม่ใช้งานจริง) ===================== -->
+  <section class="wrap admin-view" id="adminView" hidden>
+    <div class="login-card">
+      <div class="login-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </div>
+      <h2>เข้าสู่ระบบผู้ดูแล</h2>
+      <p>สำหรับผู้ดูแลระบบโปรแกรมคำนวณ GPA</p>
+
+      <form class="login-form" id="loginForm" autocomplete="off" novalidate>
+        <div>
+          <label class="lbl" for="adminUser">ชื่อผู้ใช้</label>
+          <input class="field" id="adminUser" type="text" placeholder="กรอกชื่อผู้ใช้" autocapitalize="off" spellcheck="false">
+        </div>
+        <div>
+          <label class="lbl" for="adminPass">รหัสผ่าน</label>
+          <div class="inwrap">
+            <input class="field" id="adminPass" type="password" placeholder="กรอกรหัสผ่าน">
+            <button class="pass-toggle" id="passToggle" type="button">แสดง</button>
+          </div>
+        </div>
+        <button class="login-btn" type="submit">เข้าสู่ระบบ</button>
+      </form>
+
+
+      <button class="back-link" id="backHome" type="button">← กลับหน้าคำนวณ GPA</button>
+    </div>
+
+    <!-- ===================== แผงผู้ดูแล (หลังเข้าสู่ระบบ) ===================== -->
+    <div class="admin-panel" id="adminPanel" hidden>
+      <div class="ap-head">
+        <div>
+          <h2>ระบบผู้ดูแล</h2>
+          <p id="apWho"></p>
+        </div>
+        <button class="ap-logout" id="apLogout" type="button">ออกจากระบบ</button>
+      </div>
+
+      <nav class="ap-tabs" id="apTabs">
+        <button type="button" data-tab="dash" class="on">แดชบอร์ด</button>
+        <button type="button" data-tab="comments">ความคิดเห็น</button>
+        <button type="button" data-tab="admins" data-super>จัดการแอดมิน</button>
+        <button type="button" data-tab="account">บัญชีของฉัน</button>
+      </nav>
+
+      <!-- แดชบอร์ด -->
+      <section class="ap-pane" data-pane="dash">
+        <div class="ap-stats">
+          <div class="ap-stat"><small>จำนวนผู้ใช้</small><strong id="apVisits">–</strong><span>ครั้ง</span></div>
+          <div class="ap-stat"><small>ระดับความพึงพอใจ</small><strong id="apAvg">–</strong><span>เต็ม 5</span></div>
+          <div class="ap-stat"><small>จำนวนผู้ประเมิน</small><strong id="apVotes">–</strong><span>คน</span></div>
+        </div>
+        <h3 class="ap-title">คะแนนแต่ละระดับ</h3>
+        <div class="ap-bars" id="apBars"></div>
+      </section>
+
+      <!-- ความคิดเห็น -->
+      <section class="ap-pane" data-pane="comments" hidden>
+        <div class="ap-title-row">
+          <h3 class="ap-title">ความคิดเห็นจากแบบประเมิน</h3>
+          <button class="ap-export" id="apExport" type="button">⬇ ดาวน์โหลด Excel</button>
+        </div>
+        <ul class="ap-comments" id="apComments"></ul>
+      </section>
+
+      <!-- จัดการแอดมิน (เฉพาะซุปเปอร์แอดมิน) -->
+      <section class="ap-pane" data-pane="admins" hidden>
+        <div class="ap-title-row">
+          <h3 class="ap-title">รายชื่อผู้ดูแล</h3>
+          <button class="ap-add" id="apAddOpen" type="button">+ เพิ่มแอดมิน</button>
+        </div>
+        <ul class="ap-admins" id="apAdmins"></ul>
+      </section>
+
+      <!-- บัญชีของฉัน -->
+      <section class="ap-pane" data-pane="account" hidden>
+        <h3 class="ap-title">เปลี่ยนชื่อที่แสดง</h3>
+        <form class="ap-form" id="apNameForm" novalidate>
+          <input class="field" id="apMyName" type="text" placeholder="ชื่อที่แสดง">
+          <button class="login-btn" type="submit">บันทึกชื่อ</button>
+        </form>
+
+        <h3 class="ap-title">เปลี่ยนรหัสผ่าน</h3>
+        <form class="ap-form" id="apPassForm" autocomplete="off" novalidate>
+          <input class="field" id="apOldPass" type="password" placeholder="รหัสผ่านเดิม">
+          <input class="field" id="apNewPass1" type="password" placeholder="รหัสผ่านใหม่ (อย่างน้อย 4 ตัว)">
+          <input class="field" id="apNewPass2" type="password" placeholder="ยืนยันรหัสผ่านใหม่">
+          <button class="login-btn" type="submit">เปลี่ยนรหัสผ่าน</button>
+        </form>
+      </section>
+
+      <p class="ap-demo server" id="apMode" hidden>เชื่อมต่อฐานข้อมูลแล้ว: ข้อมูลเก็บใน data/gpa_lab.db บนเซิร์ฟเวอร์</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<span class="sr-only" id="announce" role="status" aria-live="polite"></span>
+
+
+<!-- ===================== ป๊อปอัป: เกณฑ์ผลการเรียน (เด้งตอนเปิดหน้า) ===================== -->
+<div class="modal-backdrop" id="noticeModal" hidden>
+  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="noticeTitle">
+    <div class="dialog-head">
+      <button class="dialog-close" data-close aria-label="ปิด">×</button>
+    </div>
+    <h2 id="noticeTitle">เกณฑ์ผลการเรียนที่ควรรู้</h2>
+
+    <div class="dialog-body notice-body">
+      <div class="rule ok">
+        <h3>เกณฑ์การสำเร็จการศึกษา</h3>
+        <ul>
+          <li>ต้องมีผลการเรียนครบตามโครงสร้างหลักสูตร และมีผลการเรียนเฉลี่ยสะสมไม่ต่ำกว่า <b>2.00</b></li>
+        </ul>
+      </div>
+      <div class="rule honor">
+        <h3>เกณฑ์การได้รับปริญญาเกียรตินิยมต้องมีคุณสมบัติ ดังนี้</h3>
+        <ul>
+          <li>มีระยะเวลาศึกษาตามเกณฑ์ที่กำหนดไม่น้อยกว่า 6 ภาคการศึกษา และไม่เกิน 8 ภาคการศึกษาปกติ</li>
+          <li>มีผลการเรียนเฉลี่ยสะสมไม่น้อยกว่า <b>3.60</b> จะได้รับ<b>เกียรตินิยมอันดับ 1</b></li>
+          <li>มีผลการเรียนเฉลี่ยสะสมไม่น้อยกว่า <b>3.25</b> แต่ไม่ถึง 3.60 จะได้รับ<b>เกียรตินิยมอันดับ 2</b></li>
+          <li>มีผลการเรียนไม่ต่ำกว่า C ตามระบบค่าคะแนน และไม่มีผลการเรียน F หรือ NP</li>
+          <li>ไม่มีการเทียบโอนผลการเรียน (ยกเว้นเทียบโอนจากระบบคลังหน่วยกิต หรือ สถาบันอุดมศึกษาอื่นที่มีการตกลงร่วมกัน)</li>
+        </ul>
+      </div>
+      <div class="rule warn">
+        <h3>เกณฑ์สถานภาพรอพินิจ</h3>
+        <ul>
+          <li>มีผลการเรียนเฉลี่ยสะสมตั้งแต่ <b>1.60 - 1.99</b></li>
+        </ul>
+      </div>
+      <div class="rule bad">
+        <h3>เกณฑ์การพ้นสภาพการเป็นนักศึกษา ดังนี้</h3>
+        <ul>
+          <li>มีผลการเรียนเฉลี่ยสะสมต่ำกว่า <b>1.60</b></li>
+          <li>มีสภาพรอพินิจที่มีผลการเรียนเฉลี่ยสะสมต่ำกว่า 1.80 จำนวน 2 ครั้งต่อเนื่องกัน</li>
+          <li>มีสภาพรอพินิจ 4 ครั้ง ต่อเนื่องกัน</li>
+        </ul>
+      </div>
+      <p class="rule-note"><b>หมายเหตุ</b> ผลการเรียน I, M, W, NP, P และ PD จะไม่นำหน่วยกิตมาคำนวณเกรดเฉลี่ยสะสม</p>
+      <p class="ref"><a href="https://regis.dusit.ac.th/main/?page_id=4999" target="_blank" rel="noopener">อ้างอิงตามข้อบังคับมหาวิทยาลัยสวนดุสิตว่าด้วย การจัดการศึกษาระดับปริญญาตรี พ.ศ. 2566</a></p>
+    </div>
+
+    <button class="modal-action" data-close>รับทราบ</button>
+  </section>
+</div>
+
+
+<!-- ===================== ป๊อปอัป: เพิ่มแอดมิน (เฉพาะซุปเปอร์แอดมิน) ===================== -->
+<div class="modal-backdrop" id="addAdminModal" hidden>
+  <section class="dialog add-admin-dialog" role="dialog" aria-modal="true" aria-labelledby="addAdminTitle">
+    <div class="dialog-head">
+      <span class="dialog-kicker">จัดการแอดมิน</span>
+      <button class="dialog-close" type="button" data-close aria-label="ปิด">×</button>
+    </div>
+    <h2 id="addAdminTitle">เพิ่มแอดมินใหม่</h2>
+    <form class="add-admin-form" id="apAddForm" autocomplete="off" novalidate>
+      <label>
+        <span>ชื่อที่แสดง</span>
+        <input class="field" id="apNewName" type="text" placeholder="เช่น แอดมิน 2">
+      </label>
+      <label>
+        <span>ชื่อผู้ใช้ <small>(ใช้ตอนเข้าสู่ระบบ ภาษาอังกฤษตัวเล็ก ตัวเลข 3–20 ตัว)</small></span>
+        <input class="field" id="apNewUser" type="text" placeholder="เช่น admin2" autocapitalize="off" spellcheck="false">
+      </label>
+      <label>
+        <span>รหัสผ่าน <small>(อย่างน้อย 4 ตัว)</small></span>
+        <input class="field" id="apNewPass" type="password" placeholder="ตั้งรหัสผ่าน" autocomplete="new-password">
+      </label>
+      <label>
+        <span>ระดับ</span>
+        <select class="field" id="apNewLevel">
+          <option value="admin">แอดมินทั่วไป</option>
+        </select>
+      </label>
+      <div class="add-admin-actions">
+        <button class="ap-cancel" type="button" data-close>ยกเลิก</button>
+        <button class="modal-action" type="submit">เพิ่มแอดมิน</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+
+<!-- ===================== ป๊อปอัป: คำอธิบาย CAX / CGX ===================== -->
+<div class="modal-backdrop" id="helpModal" hidden>
+  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="dialog-head">
+      <span class="dialog-kicker">คำอธิบาย</span>
+      <button class="dialog-close" data-close aria-label="ปิด">×</button>
+    </div>
+    <h2 id="helpTitle"></h2>
+    <div class="dialog-body" id="helpBody"></div>
+    <button class="modal-action" data-close>เข้าใจแล้ว</button>
+  </section>
+</div>
+
+
+<!-- ===================== ป๊อปอัป: แบบประเมินความพึงพอใจ ===================== -->
+<div class="modal-backdrop" id="rateModal" hidden>
+  <section class="dialog rate-dialog" role="dialog" aria-modal="true" aria-labelledby="rateTitle">
+    <button class="dialog-close" data-close aria-label="ปิด">×</button>
+
+    <span class="rate-pill">แบบประเมิน</span>
+    <h2 id="rateTitle">ประเมินความพึงพอใจ</h2>
+    <p class="rate-sub">คะแนนของคุณช่วยให้เราปรับปรุงและพัฒนาบริการให้ดียิ่งขึ้น</p>
+
+    <p class="rate-q">เลือกระดับความพึงพอใจ <i>*</i></p>
+    <div class="stars" id="stars"><!-- ดาว 5 ดวง สร้างใน js/app.js --></div>
+    <p class="rate-label" id="rateLabel">แตะดาวเพื่อให้คะแนน (1 - 5)</p>
+
+    <label class="rate-fb" for="rateText">ข้อเสนอแนะเพิ่มเติม <i>(ไม่บังคับ)</i></label>
+    <textarea class="rate-text" id="rateText" rows="3" maxlength="300" placeholder="เขียนข้อความหรือข้อเสนอแนะที่ต้องการแจ้งให้เราทราบ..."></textarea>
+    <div class="rate-count" id="rateCount">0/300</div>
+
+    <button class="rate-send" id="rateSend" type="button">
+      ส่งแบบประเมิน
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+    </button>
+  </section>
+</div>
+
+<script src="js/excel.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
